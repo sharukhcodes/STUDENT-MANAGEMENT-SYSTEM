@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Register — Student Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2B24;
+    --ink-soft:#25392F;
+    --paper:#F3EEE1;
+    --paper-dim:#E9E2D0;
+    --brass:#A9793F;
+    --brass-dark:#7C5A2E;
+    --stamp:#8B3A3A;
+    --stamp-dark:#6B2B2B;
+    --line:#C9BEA0;
+    --ink-text:#20241F;
+    --muted:#6B6255;
+    --good:#3E6B4C;
+    --shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,0.03), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(255,255,255,0.02), transparent 40%);
+    color:var(--ink-text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--brass); color:#fff; }
+
+  /* ---------- Utility ---------- */
+  .mono{ font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em; }
+  .display{ font-family:'Fraunces',serif; }
+  button{ font-family:'Inter',sans-serif; cursor:pointer; }
+  input, select, textarea{ font-family:'Inter',sans-serif; }
+
+  /* ---------- Login screen ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .cover{
+    width:100%;
+    max-width:420px;
+    background:var(--paper);
+    border-radius:4px;
+    box-shadow:var(--shadow);
+    padding:48px 40px 40px;
+    position:relative;
+    border-top:6px solid var(--brass);
+  }
+  .cover::before{
+    content:'';
+    position:absolute;
+    top:24px; right:24px;
+    width:64px; height:64px;
+    border:2px solid var(--stamp);
+    border-radius:50%;
+    opacity:0.35;
+    transform:rotate(-12deg);
+  }
+  .cover-eyebrow{
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 6px;
+  }
+  .cover h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:32px;
+    margin:0 0 4px;
+    color:var(--ink-soft);
+    line-height:1.1;
+  }
+  .cover .sub{
+    font-size:13px;
+    color:var(--muted);
+    margin:0 0 32px;
+    border-bottom:1px dashed var(--line);
+    padding-bottom:24px;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:2px;
+    background:#fff;
+    font-size:14px;
+    color:var(--ink-text);
+  }
+  .field input:focus{
+    outline:none;
+    border-color:var(--brass);
+    box-shadow:0 0 0 3px rgba(169,121,63,0.15);
+  }
+  .btn-primary{
+    width:100%;
+    padding:12px;
+    background:var(--ink-soft);
+    color:var(--paper);
+    border:none;
+    border-radius:2px;
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    font-weight:500;
+    transition:background 0.15s ease;
+  }
+  .btn-primary:hover{ background:var(--stamp-dark); }
+  .login-error{
+    color:var(--stamp);
+    font-size:13px;
+    margin:-6px 0 14px;
+    display:none;
+  }
+  .login-hint{
+    margin-top:20px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.6;
+  }
+
+  /* ---------- Main app ---------- */
+  #app{ display:none; min-height:100vh; }
+  .app-shell{
+    max-width:1040px;
+    margin:0 auto;
+    padding:32px 24px 80px;
+  }
+  header.top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-bottom:28px;
+    padding-bottom:20px;
+    border-bottom:2px solid var(--brass);
+  }
+  header.top .title-block .eyebrow{
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin:0 0 4px;
+    opacity:0.7;
+  }
+  header.top h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:30px;
+    color:var(--paper);
+    margin:0;
+  }
+  .logout-btn{
+    background:transparent;
+    border:1px solid rgba(243,238,225,0.35);
+    color:var(--paper);
+    padding:8px 16px;
+    border-radius:2px;
+    font-size:12px;
+    letter-spacing:0.05em;
+  }
+  .logout-btn:hover{ background:rgba(243,238,225,0.1); }
+
+  .toolbar{
+    display:flex;
+    gap:12px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+  }
+  .search-wrap{
+    flex:1;
+    min-width:220px;
+    position:relative;
+  }
+  .search-wrap input{
+    width:100%;
+    padding:11px 14px 11px 38px;
+    border:none;
+    border-radius:2px;
+    background:var(--paper);
+    font-size:14px;
+    color:var(--ink-text);
+  }
+  .search-wrap input:focus{ outline:2px solid var(--brass); }
+  .search-wrap svg{
+    position:absolute;
+    left:12px; top:50%;
+    transform:translateY(-50%);
+    width:16px; height:16px;
+    stroke:var(--muted);
+  }
+  .btn-add{
+    background:var(--brass);
+    color:#fff;
+    border:none;
+    padding:11px 20px;
+    border-radius:2px;
+    font-size:13px;
+    font-weight:500;
+    letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .btn-add:hover{ background:var(--brass-dark); }
+
+  .count-strip{
+    color:var(--paper-dim);
+    opacity:0.75;
+    font-size:12px;
+    margin:-14px 0 18px;
+    letter-spacing:0.03em;
+  }
+
+  /* ---------- Student cards (index-card look) ---------- */
+  #cardGrid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+    gap:16px;
+  }
+  .stu-card{
+    background:var(--paper);
+    border-radius:3px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.22);
+    padding:18px 18px 16px;
+    position:relative;
+    border-left:5px solid var(--brass);
+    transition:transform 0.12s ease;
+  }
+  .stu-card:hover{ transform:translateY(-2px); }
+  .stu-card .roll{
+    position:absolute;
+    top:14px; right:16px;
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:0.05em;
+  }
+  .stu-card .name{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:19px;
+    color:var(--ink-soft);
+    margin:0 60px 2px 0;
+  }
+  .stu-card .grade{
+    font-size:12px;
+    color:var(--brass-dark);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin:0 0 12px;
+  }
+  .stu-card .meta-row{
+    display:flex;
+    gap:8px;
+    font-size:12.5px;
+    color:var(--ink-text);
+    margin-bottom:4px;
+    line-height:1.5;
+  }
+  .stu-card .meta-row .label{
+    color:var(--muted);
+    min-width:64px;
+    flex-shrink:0;
+  }
+  .stu-card .actions{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px dashed var(--line);
+  }
+  .icon-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:6px 12px;
+    border-radius:2px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .icon-btn:hover{ background:var(--paper-dim); }
+  .icon-btn.danger{ color:var(--stamp); border-color:rgba(139,58,58,0.35); }
+  .icon-btn.danger:hover{ background:rgba(139,58,58,0.08); }
+  .icon-btn svg{ width:13px; height:13px; }
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:70px 20px;
+    color:var(--paper-dim);
+    opacity:0.8;
+  }
+  .empty-state .display{
+    font-size:22px;
+    color:var(--paper);
+    margin-bottom:8px;
+    opacity:1;
+  }
+  .empty-state p{ font-size:13px; margin:0; }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(20,26,22,0.6);
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background:var(--paper);
+    width:100%;
+    max-width:480px;
+    border-radius:4px;
+    box-shadow:var(--shadow);
+    padding:28px 28px 24px;
+    max-height:90vh;
+    overflow-y:auto;
+    border-top:5px solid var(--brass);
+  }
+  .modal h2{
+    font-family:'Fraunces',serif;
+    font-size:22px;
+    margin:0 0 4px;
+    color:var(--ink-soft);
+  }
+  .modal .modal-sub{
+    font-size:12px;
+    color:var(--muted);
+    margin:0 0 20px;
+  }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .modal .field label{ font-size:11px; }
+  .modal .field input, .modal .field select{
+    width:100%;
+    padding:9px 11px;
+    border:1px solid var(--line);
+    border-radius:2px;
+    background:#fff;
+    font-size:13.5px;
+    color:var(--ink-text);
+  }
+  .modal .field input:focus, .modal .field select:focus{
+    outline:none; border-color:var(--brass);
+  }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:22px;
+  }
+  .btn-cancel{
+    flex:1;
+    padding:11px;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-text);
+    border-radius:2px;
+    font-size:13px;
+  }
+  .btn-cancel:hover{ background:var(--paper-dim); }
+  .btn-save{
+    flex:2;
+    padding:11px;
+    background:var(--ink-soft);
+    color:var(--paper);
+    border:none;
+    border-radius:2px;
+    font-size:13px;
+    font-weight:500;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+  }
+  .btn-save:hover{ background:var(--stamp-dark); }
+  .field-error{
+    color:var(--stamp);
+    font-size:11.5px;
+    margin-top:4px;
+    display:none;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink-soft);
+    color:var(--paper);
+    padding:12px 22px;
+    border-radius:3px;
+    font-size:13px;
+    box-shadow:var(--shadow);
+    opacity:0;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+    z-index:100;
+    pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:520px){
+    .grid-2{ grid-template-columns:1fr; }
+    header.top h1{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen">
+  <div class="cover">
+    <p class="cover-eyebrow">Administrator access</p>
+    <h1>The Register</h1>
+    <p class="sub">Student management &amp; enrollment ledger</p>
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <label for="loginUser">Username</label>
+        <input type="text" id="loginUser" placeholder="admin" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <p class="login-error" id="loginError">Incorrect username or password.</p>
+      <button type="submit" class="btn-primary">Sign in</button>
+    </form>
+    <p class="login-hint">Demo credentials — <span class="mono">admin</span> / <span class="mono">admin123</span><br>Client-side login for demo purposes only; not secure for real deployments.</p>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app">
+  <div class="app-shell">
+    <header class="top">
+      <div class="title-block">
+        <p class="eyebrow">Administrator</p>
+        <h1>The Register</h1>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Sign out</button>
+    </header>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Search by name, roll number, grade, or email">
+      </div>
+      <button class="btn-add" id="addBtn">+ Add student</button>
+    </div>
+
+    <p class="count-strip" id="countStrip"></p>
+
+    <div id="cardGrid"></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL ===================== -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add student</h2>
+    <p class="modal-sub" id="modalSub">Enter the student's record details.</p>
+    <form id="studentForm" autocomplete="off">
+      <input type="hidden" id="studentId">
+      <div class="field">
+        <label for="fName">Full name</label>
+        <input type="text" id="fName" placeholder="e.g. Ananya Rao">
+        <p class="field-error" id="errName">Full name is required.</p>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="fRoll">Roll number</label>
+          <input type="text" id="fRoll" placeholder="e.g. 24-108">
+          <p class="field-error" id="errRoll">Roll number is required and must be unique.</p>
+        </div>
+        <div class="field">
+          <label for="fGrade">Grade / class</label>
+          <input type="text" id="fGrade" placeholder="e.g. Grade 10 - B">
+        </div>
+      </div>
+      <div class="field">
+        <label for="fEmail">Email</label>
+        <input type="email" id="fEmail" placeholder="student@school.edu">
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="fPhone">Phone</label>
+          <input type="text" id="fPhone" placeholder="+91 90000 00000">
+        </div>
+        <div class="field">
+          <label for="fGuardian">Guardian name</label>
+          <input type="text" id="fGuardian" placeholder="e.g. Rakesh Rao">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn-save" id="saveBtn">Save student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = 'admin123';
+  const STORAGE_KEY = 'sms:students';
+
+  let students = [];
+  let editingId = null;
+
+  const loginScreen = document.getElementById('loginScreen');
+  const app = document.getElementById('app');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  function uid(){
+    return 's_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  async function loadStudents(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      students = res && res.value ? JSON.parse(res.value) : seedData();
+      if(!res){ await saveStudents(); }
+    }catch(e){
+      students = seedData();
+      await saveStudents();
+    }
+    render();
+  }
+
+  async function saveStudents(){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(students), false);
+    }catch(e){
+      showToast('Could not save — storage error.');
+    }
+  }
+
+  function seedData(){
+    return [
+      { id: uid(), name:'Ananya Rao', roll:'24-101', grade:'Grade 10 - B', email:'ananya.rao@school.edu', phone:'+91 90001 12233', guardian:'Rakesh Rao' },
+      { id: uid(), name:'Devraj Singh', roll:'24-102', grade:'Grade 10 - A', email:'devraj.singh@school.edu', phone:'+91 90002 44556', guardian:'Meera Singh' },
+      { id: uid(), name:'Priya Menon', roll:'24-103', grade:'Grade 9 - C', email:'priya.menon@school.edu', phone:'+91 90003 77889', guardian:'Suresh Menon' }
+    ];
+  }
+
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  function render(){
+    const grid = document.getElementById('cardGrid');
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    let list = students;
+    if(q){
+      list = students.filter(s =>
+        (s.name||'').toLowerCase().includes(q) ||
+        (s.roll||'').toLowerCase().includes(q) ||
+        (s.grade||'').toLowerCase().includes(q) ||
+        (s.email||'').toLowerCase().includes(q)
+      );
+    }
+    document.getElementById('countStrip').textContent =
+      students.length === 0 ? 'No records in the register yet.' :
+      (q ? `${list.length} of ${students.length} records match "${q}"` : `${students.length} record${students.length===1?'':'s'} on file`);
+
+    if(list.length === 0){
+      grid.innerHTML = `<div class="empty-state">
+        <p class="display">${students.length===0 ? 'The register is empty' : 'No matches found'}</p>
+        <p>${students.length===0 ? 'Add your first student to begin.' : 'Try a different name, roll number, or grade.'}</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(s => `
+      <div class="stu-card">
+        <p class="roll mono">#${escapeHtml(s.roll)}</p>
+        <p class="name">${escapeHtml(s.name)}</p>
+        <p class="grade">${escapeHtml(s.grade || '—')}</p>
+        <div class="meta-row"><span class="label">Email</span><span>${escapeHtml(s.email || '—')}</span></div>
+        <div class="meta-row"><span class="label">Phone</span><span>${escapeHtml(s.phone || '—')}</span></div>
+        <div class="meta-row"><span class="label">Guardian</span><span>${escapeHtml(s.guardian || '—')}</span></div>
+        <div class="actions">
+          <button class="icon-btn" data-edit="${s.id}">Edit</button>
+          <button class="icon-btn danger" data-delete="${s.id}">Delete</button>
+        </div>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', ()=> openModal(btn.getAttribute('data-edit')));
+    });
+    grid.querySelectorAll('[data-delete]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteStudent(btn.getAttribute('data-delete')));
+    });
+  }
+
+  function openModal(id){
+    editingId = id || null;
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSub');
+    document.getElementById('studentForm').reset();
+    hideErrors();
+
+    if(id){
+      const s = students.find(x=>x.id === id);
+      if(!s) return;
+      title.textContent = 'Edit student';
+      sub.textContent = `Updating record for ${s.name}.`;
+      document.getElementById('studentId').value = s.id;
+      document.getElementById('fName').value = s.name || '';
+      document.getElementById('fRoll').value = s.roll || '';
+      document.getElementById('fGrade').value = s.grade || '';
+      document.getElementById('fEmail').value = s.email || '';
+      document.getElementById('fPhone').value = s.phone || '';
+      document.getElementById('fGuardian').value = s.guardian || '';
+    } else {
+      title.textContent = 'Add student';
+      sub.textContent = "Enter the student's record details.";
+      document.getElementById('studentId').value = '';
+    }
+    overlay.classList.add('show');
+    document.getElementById('fName').focus();
+  }
+
+  function closeModal(){
+    document.getElementById('overlay').classList.remove('show');
+    editingId = null;
+  }
+
+  function hideErrors(){
+    document.getElementById('errName').style.display = 'none';
+    document.getElementById('errRoll').style.display = 'none';
+  }
+
+  function deleteStudent(id){
+    const s = students.find(x=>x.id === id);
+    if(!s) return;
+    if(!confirm(`Remove ${s.name} (#${s.roll}) from the register? This cannot be undone.`)) return;
+    students = students.filter(x=>x.id !== id);
+    saveStudents();
+    render();
+    showToast('Student removed.');
+  }
+
+  document.getElementById('studentForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    hideErrors();
+    const name = document.getElementById('fName').value.trim();
+    const roll = document.getElementById('fRoll').value.trim();
+    const grade = document.getElementById('fGrade').value.trim();
+    const email = document.getElementById('fEmail').value.trim();
+    const phone = document.getElementById('fPhone').value.trim();
+    const guardian = document.getElementById('fGuardian').value.trim();
+    const id = document.getElementById('studentId').value;
+
+    let hasError = false;
+    if(!name){ document.getElementById('errName').style.display = 'block'; hasError = true; }
+    const dupe = students.find(s => s.roll.toLowerCase() === roll.toLowerCase() && s.id !== id);
+    if(!roll || dupe){ document.getElementById('errRoll').style.display = 'block'; hasError = true; }
+    if(hasError) return;
+
+    if(id){
+      const s = students.find(x=>x.id === id);
+      Object.assign(s, { name, roll, grade, email, phone, guardian });
+      showToast('Student updated.');
+    } else {
+      students.push({ id: uid(), name, roll, grade, email, phone, guardian });
+      showToast('Student added.');
+    }
+    saveStudents();
+    closeModal();
+    render();
+  });
+
+  document.getElementById('addBtn').addEventListener('click', ()=> openModal(null));
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id === 'overlay') closeModal(); });
+  document.getElementById('searchInput').addEventListener('input', render);
+
+  loginForm.addEventListener('submit', function(e){
+  console.log("Login button clicked");
+    e.preventDefault();
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if(u === ADMIN_USER && p === ADMIN_PASS){
+      loginError.style.display = 'none';
+      loginScreen.style.display = 'none';
+      app.style.display = 'block';
+      loadStudents();
+    } else {
+      loginError.style.display = 'block';
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', function(){
+    app.style.display = 'none';
+    loginScreen.style.display = 'flex';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginUser').value = '';
+  });
+})();
+</script>
+</body>
+</html>
